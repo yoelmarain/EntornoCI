@@ -6,3 +6,4 @@ document.getElementById('concatButton').addEventListener('click', () => {
     const result = window.concatenateNumbers(number1, number2);
     document.getElementById('result').textContent = `Resultado: ${result}`;
 });
+
