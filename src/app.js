@@ -7,3 +7,6 @@ document.getElementById('concatButton').addEventListener('click', () => {
     document.getElementById('result').textContent = `Resultado: ${result}`;
 });
 
+
+
+
