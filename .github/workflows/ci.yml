@@ -42,7 +42,7 @@ jobs:
       env:
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
         SLACK_TITLE: "Exito"
-        SLACK_MESSAGE: "✅ CI finalizado con éxito en `${{ github.ref_name }}` por ${{ github.actor }}"
+        SLACK_MESSAGE: "✅Test de Jest y Linter finalizados con éxito en `${{ github.ref_name }}` por ${{ github.actor }}"
         SLACK_COLOR: good
 
     - name: Notificar en Slack (error)
@@ -51,5 +51,5 @@ jobs:
       env:
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
         SLACK_TITLE: "Error"
-        SLACK_MESSAGE: "❌ CI falló en `${{ github.ref_name }}` por ${{ github.actor }}"
+        SLACK_MESSAGE: "❌Test de Jest o Linter falló en `${{ github.ref_name }}` por ${{ github.actor }}"
         SLACK_COLOR: danger
