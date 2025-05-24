@@ -1,6 +1,5 @@
 function concatenateNumbers(num1, num2) {
-    // return num1 + num2;
-    return 'a';
+    return num1 + num2;
 }
 
 // CommonJS export (para Node/Jest)
