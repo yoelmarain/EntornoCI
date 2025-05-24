@@ -29,9 +29,25 @@ jobs:
 
     - name: Lint code with ESLint
       run: npm run lint
-      
+
     - name: Run tests with Jest
       run: npm test
 
     - name: Build project
       run: npm run build
+
+    - name: Notificar en Slack (éxito)
+      if: success()
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_MESSAGE: "✅ CI finalizado con éxito en `${{ github.ref_name }}` por ${{ github.actor }}"
+        SLACK_COLOR: good
+
+    - name: Notificar en Slack (error)
+      if: failure()
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_MESSAGE: "❌ CI falló en `${{ github.ref_name }}` por ${{ github.actor }}"
+        SLACK_COLOR: danger
