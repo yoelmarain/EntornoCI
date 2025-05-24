@@ -33,8 +33,9 @@ jobs:
     - name: Run tests with Jest
       run: npm test
 
-    - name: Build project
-      run: npm run build
+    # - name: Build project
+    #   run: npm run build
+    # La hace render a la build por eso no la pongo
 
     - name: Notificar en Slack (éxito)
       if: success()
