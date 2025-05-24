@@ -41,8 +41,6 @@ jobs:
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-        SLACK_USERNAME: "CI Bot"
-        SLACK_ICON_EMOJI: ":robot_face:"
         SLACK_TITLE: "Exito"
         SLACK_MESSAGE: "✅ CI finalizado con éxito en `${{ github.ref_name }}` por ${{ github.actor }}"
         SLACK_COLOR: good
@@ -52,8 +50,6 @@ jobs:
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-        SLACK_USERNAME: "CI Bot"
-        SLACK_ICON_EMOJI: ":robot_face:"
         SLACK_TITLE: "Error"
         SLACK_MESSAGE: "❌ CI falló en `${{ github.ref_name }}` por ${{ github.actor }}"
         SLACK_COLOR: danger
