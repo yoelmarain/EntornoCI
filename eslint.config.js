@@ -25,7 +25,7 @@ export default defineConfig([
     extends: ["js/recommended"],
     languageOptions: {
       sourceType: "commonjs",
-      globals: { ...globals.node, ...globals.jest, ...globals.cypress },
+      globals: { ...globals.node, ...globals.jest, ...globals.cypress, cy: "readonly",},
     },
   },
 ]);
