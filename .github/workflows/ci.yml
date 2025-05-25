@@ -54,3 +54,10 @@ jobs:
         SLACK_TITLE: "Error"
         SLACK_MESSAGE: "❌Test de Jest o Linter falló en `${{ github.ref_name }}` por ${{ github.actor }}"
         SLACK_COLOR: danger
+
+    - name: Deploy a Render
+      if: github.ref == 'refs/heads/main' && success()
+      run: |
+        echo "Deploying to Render..."
+        curl -X POST {{ secrets.RENDER_DEPLOY_HOOK }}
+      
