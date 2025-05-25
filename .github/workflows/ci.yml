@@ -61,3 +61,20 @@ jobs:
         echo "Deploying to Render..."
         curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
       
+    - name: Notificar en Slack (deploy exitoso)
+      if: success() && github.ref == 'refs/heads/main'
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_TITLE: "Deploy Exitoso"
+        SLACK_MESSAGE: "🚀 Deploy a Render finalizado con éxito en `${{ github.ref_name }}` por ${{ github.actor }}"
+        SLACK_COLOR: good
+
+    - name: Notificar en Slack (deploy fallido)
+      if: failure() && github.ref == 'refs/heads/main'
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_TITLE: "Deploy Fallido"
+        SLACK_MESSAGE: "❌ El deploy a Render falló en `${{ github.ref_name }}` por ${{ github.actor }}"
+        SLACK_COLOR: danger
