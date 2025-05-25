@@ -33,9 +33,9 @@ jobs:
     - name: Run tests with Jest
       run: npm test
 
-    - name: Build project
-      run: npm run build
-    
+    # - name: Build project
+    #   run: npm run build
+    # Por ahora a la build la hacemos en el deploy    
 
     - name: Notificar en Slack (éxito)
       if: success()
