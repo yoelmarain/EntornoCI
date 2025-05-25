@@ -55,28 +55,50 @@ jobs:
         SLACK_MESSAGE: "❌Test de Jest o Linter falló en `${{ github.ref_name }}` por ${{ github.actor }}"
         SLACK_COLOR: danger
 
-    - name: Deploy a Render
-      if: github.ref == 'refs/heads/main' && success()
-      run: |
-        echo "Deploying to Render..."
-        curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
-      
-    - name: Notificar en Slack (deploy exitoso)
-      if: success() && github.ref == 'refs/heads/main'
-      uses: rtCamp/action-slack-notify@v2
-      env:
-        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-        SLACK_TITLE: "Deploy Exitoso"
-        SLACK_MESSAGE: "🚀 Deploy a Render finalizado con éxito en `${{ github.ref_name }}` por ${{ github.actor }}"
-        SLACK_COLOR: good
-
-    - name: Notificar en Slack (deploy fallido)
-      if: failure() && github.ref == 'refs/heads/main'
-      uses: rtCamp/action-slack-notify@v2
-      env:
-        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-        SLACK_TITLE: "Deploy Fallido"
-        SLACK_MESSAGE: "❌ El deploy a Render falló en `${{ github.ref_name }}` por ${{ github.actor }}"
-        SLACK_COLOR: danger
-
+  start_deploy_render:
+      name: Iniciar el despliegue en Render
+      runs-on: ubuntu-latest
+      needs: run-tests
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.run-tests.result == 'success'
+      steps:
+        - name: Desplegar en Render
+          run: |
+            response=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}")
+            if [ $response -eq 200 ]; then
+              echo "Deployment triggered successfully"
+              curl -X POST -H 'Content-type: application/json' --data '{"text":"⌛️ Iniciando despliegue en Render..."}' "${{ secrets.SLACK_WEBHOOK_URL }}"
+            else
+              echo "Deployment failed with HTTP status code $response"
+              curl -X POST -H 'Content-type: application/json' --data '{"text":"Ha fallado al iniciar el despliegue en Render!"}' "${{ secrets.SLACK_WEBHOOK_URL }}"
+              exit 1
+            fi
+          env:
+            SLACK_WEBHOOK_DEPLOYS: ${{ secrets.SLACK_WEBHOOK_URL }}
         
+  deploy_in_process:
+    name: Esperar resultado del deploy en Render
+    runs-on: ubuntu-latest
+    needs: start_deploy_render
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.start_deploy_render.result == 'success'
+    steps:
+      - name: Esperar a que Render termine el deploy
+        run: |
+          deploy_status="pending"
+          while [ "$deploy_status" != "live" ]; do
+            response=$(curl -s -H "Authorization: Bearer $RENDER_API_KEY" "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys")
+            echo "Render API response: $response"
+            deploy_status=$(echo $response | jq -r '.[0].status')
+            echo "Current deploy status: $deploy_status"
+            if [ "$deploy_status" == "failed" ]; then
+              echo "Deployment failed."
+              curl -X POST -H 'Content-type: application/json' --data '{"text":"❌ Ha fallado el Deploy!"}' "${{ secrets.SLACK_WEBHOOK_URL }}"
+              exit 1
+            fi
+            sleep 5
+          done
+          curl -X POST -H 'Content-type: application/json' --data '{"text":":white_check_mark: Deploy exitoso."}' "${{ secrets.SLACK_WEBHOOK_URL }}"
+          echo "Deployment completed successfully."
+        env:
+          SLACK_WEBHOOK_DEPLOYS: ${{ secrets.SLACK_WEBHOOK_URL }}
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+
