@@ -45,8 +45,13 @@ jobs:
     #   run: npm run build
     # Por ahora a la build la hacemos en el deploy    
 
+  notify_slack_test_lint_exito:
+    name: Notificar el exito de Jest y Linter
+    runs-on: ubuntu-22.04
+    needs: Test_and_Lint
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.Test_and_Lint.result == 'success'
+    steps:                                
     - name: Notificar en Slack (éxito)
-      if: success()
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -54,8 +59,13 @@ jobs:
         SLACK_MESSAGE: "✅Test de Jest y Linter finalizados con éxito en `${{ github.ref_name }}` por ${{ github.actor }}"
         SLACK_COLOR: good
 
+  notify_slack_test_lint_fallido:
+    name: Notificar el fallo de Jest y Linter
+    runs-on: ubuntu-22.04
+    needs: Test_and_Lint
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.Test_and_Lint.result == 'failure'
+    steps:
     - name: Notificar en Slack (error)
-      if: failure()
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -165,6 +175,12 @@ jobs:
       - name: Ejecutar Cypress
         run: npm run cypress:run
 
+  notify_slack_cypress_exito:
+    name: Notificar el exito de Cypress
+    runs-on: ubuntu-22.04
+    needs: test_deploy
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && success()
+    steps:
       - name: Notificar en Slack (éxito)
         if: success()
         uses: rtCamp/action-slack-notify@v2
@@ -173,7 +189,13 @@ jobs:
           SLACK_TITLE: "Cypress Tests"
           SLACK_MESSAGE: "✅Tests de Cypress finalizados con éxito en `${{ github.ref_name }}` por ${{ github.actor }}"
           SLACK_COLOR: good
-      
+     
+  notify_slack_cypress_fallido:
+    name: Notificar el fallo de Cypress
+    runs-on: ubuntu-22.04
+    needs: test_deploy
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && failure()
+    steps:
       - name: Notificar en Slack (error)
         if: failure()
         uses: rtCamp/action-slack-notify@v2
