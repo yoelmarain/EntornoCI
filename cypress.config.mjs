@@ -2,6 +2,10 @@
 
 export default {
   e2e: {
-    specPattern: 'test/**/*.cy.js'
+    setupNodeEvents(on, config) {
+      // Puedes agregar eventos de Node aquí si los necesitas
+    },
+    supportFile: false,
+    specPattern: 'test/**/*.cy.{js,jsx,ts,tsx}'
   },
 };
