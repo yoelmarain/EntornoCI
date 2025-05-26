@@ -84,7 +84,6 @@ jobs:
             response=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}")
             if [ $response -eq 200 ]; then
               echo "Deployment triggered successfully"
-              curl -X POST -H 'Content-type: application/json' --data '{"text":"⌛️ Iniciando despliegue en Render..."}' "${{ secrets.SLACK_WEBHOOK_URL }}"
             else
               echo "Deployment failed with HTTP status code $response"
               curl -X POST -H 'Content-type: application/json' --data '{"text":"Ha fallado al iniciar el despliegue en Render!"}' "${{ secrets.SLACK_WEBHOOK_URL }}"
