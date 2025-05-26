@@ -42,7 +42,7 @@ jobs:
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-        SLACK_TITLE: "Exito"
+        SLACK_TITLE: "Jest y Linter"
         SLACK_MESSAGE: "✅Test de Jest y Linter finalizados con éxito en `${{ github.ref_name }}` por ${{ github.actor }}"
         SLACK_COLOR: good
 
@@ -51,7 +51,7 @@ jobs:
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-        SLACK_TITLE: "Error"
+        SLACK_TITLE: "Jest y Linter"
         SLACK_MESSAGE: "❌Test de Jest o Linter falló en `${{ github.ref_name }}` por ${{ github.actor }}"
         SLACK_COLOR: danger
 
@@ -96,7 +96,7 @@ jobs:
             fi
             sleep 5
           done
-          curl -X POST -H 'Content-type: application/json' --data '{"text":":white_check_mark: Deploy exitoso."}' "${{ secrets.SLACK_WEBHOOK_URL }}"
+          curl -X POST -H 'Content-type: application/json' --data '{"text":"🚀 Deploy exitoso!"}' "${{ secrets.SLACK_WEBHOOK_URL }}"
           echo "Deployment completed successfully."
         env:
           SLACK_WEBHOOK_DEPLOYS: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -119,7 +119,25 @@ jobs:
           node-version: 20
 
       - name: Instalar dependencias
-        run: npm install
+        run: npm install --no-audit --no-optional
 
       - name: Ejecutar Cypress
         run: npm run cypress:run
+
+      - name: Notificar en Slack (éxito)
+        if: success()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_TITLE: "Cypress Tests"
+          SLACK_MESSAGE: "✅Tests de Cypress finalizados con éxito en `${{ github.ref_name }}` por ${{ github.actor }}"
+          SLACK_COLOR: good
+      
+      - name: Notificar en Slack (error)
+        if: failure()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_TITLE: "Cypress Tests"
+          SLACK_MESSAGE: "❌Tests de Cypress fallaron en `${{ github.ref_name }}` por ${{ github.actor }}"
+          SLACK_COLOR: danger
