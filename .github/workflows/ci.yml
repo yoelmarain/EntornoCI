@@ -8,7 +8,7 @@ on:
     branches: [main]
 
 jobs:
-  run-tests:
+  Test_and_Lint:
     runs-on: ubuntu-22.04
 
     steps:
@@ -20,7 +20,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '20'
+        node-version: 20
 
     - name: Install dependencies
       run: npm install --no-audit --nooptional
@@ -65,9 +65,9 @@ jobs:
 
   start_deploy_render:
       name: Iniciar el despliegue en Render
-      runs-on: ubuntu-latest
-      needs: run-tests
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.run-tests.result == 'success'
+      runs-on: ubuntu-22.04
+      needs: Test_and_Lint
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.Test_and_Lint.result == 'success'
       steps:
         - name: Desplegar en Render
           run: |
@@ -85,7 +85,7 @@ jobs:
         
   deploy_in_process:
     name: Esperar resultado del deploy en Render
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: start_deploy_render
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.start_deploy_render.result == 'success'
     steps:
@@ -99,20 +99,45 @@ jobs:
             echo "Current deploy status: $deploy_status"
             if [ "$deploy_status" == "failed" ]; then
               echo "Deployment failed."
-              curl -X POST -H 'Content-type: application/json' --data '{"text":"❌ Ha fallado el Deploy!"}' "${{ secrets.SLACK_WEBHOOK_URL }}"
               exit 1
             fi
             sleep 5
           done
-          curl -X POST -H 'Content-type: application/json' --data '{"text":"🚀 Deploy exitoso!"}' "${{ secrets.SLACK_WEBHOOK_URL }}"
           echo "Deployment completed successfully."
         env:
-          SLACK_WEBHOOK_DEPLOYS: ${{ secrets.SLACK_WEBHOOK_URL }}
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
 
+  notify_deploy_exito:
+    name: Notificar el exito del deploy
+    runs-on: ubuntu-22.04
+    needs: deploy_in_process
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.deploy_in_process.result == 'success'
+    steps:
+      - name: Notificar en Slack (deploy exitoso)
+        uses: rtCamp/action-slack-notify@v2
+        env:
+            SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+            SLACK_TITLE: "Deploy Render"
+            SLACK_MESSAGE: "🚀 Deploy exitoso en `${{ github.ref_name }}` por ${{ github.actor }}"
+            SLACK_COLOR: good
+
+  notify_deploy_fallido:
+    name: Notificar el fallo del deploy
+    runs-on: ubuntu-22.04
+    needs: deploy_in_process
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.deploy_in_process.result == 'failure'
+    steps:
+      - name: Notificar en Slack (deploy fallido)
+        uses: rtCamp/action-slack-notify@v2
+        env:
+            SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+            SLACK_TITLE: "Deploy Render"
+            SLACK_MESSAGE: "❌ Deploy fallido en `${{ github.ref_name }}` por ${{ github.actor }}"
+            SLACK_COLOR: danger
+  
   test_deploy:
     name: Testear el deploy
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: deploy_in_process
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && success()
     steps:
