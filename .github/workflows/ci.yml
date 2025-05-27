@@ -245,3 +245,4 @@ jobs:
           SLACK_TITLE: "Cypress Tests"
           SLACK_MESSAGE: "❌Tests de Cypress fallaron en `${{ github.ref_name }}` por ${{ github.actor }}"
           SLACK_COLOR: danger
+
