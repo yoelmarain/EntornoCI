@@ -87,8 +87,8 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
   
-  notify_slack_test_lint_exito:
-    name: Notificar el exito de Jest y Linter
+  notify_slack_test_sonar_exito:
+    name: Notificar el exito de Jest y Sonar Cloud
     runs-on: ubuntu-22.04
     needs: test_and_sonarCloud
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs. test_and_sonarCloud.result == 'success'
@@ -97,12 +97,12 @@ jobs:
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-        SLACK_TITLE: "Jest y Linter"
-        SLACK_MESSAGE: "✅Test de Jest y Linter finalizados con éxito en `${{ github.ref_name }}` por ${{ github.actor }}"
+        SLACK_TITLE: "Jest y Sonar Cloud"
+        SLACK_MESSAGE: "✅Test de Jest y coverage de Sonar Cloud finalizados con éxito en `${{ github.ref_name }}` por ${{ github.actor }}"
         SLACK_COLOR: good
 
-  notify_slack_test_lint_fallido:
-    name: Notificar el fallo de Jest y Linter
+  notify_slack_test_sonar_fallido:
+    name: Notificar el fallo de Jest y Sonar Cloud
     runs-on: ubuntu-22.04
     needs: test_and_sonarCloud
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.test_and_sonarCloud.result == 'failure'
@@ -111,8 +111,8 @@ jobs:
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-        SLACK_TITLE: "Jest y Linter"
-        SLACK_MESSAGE: "❌Test de Jest o Linter falló en `${{ github.ref_name }}` por ${{ github.actor }}"
+        SLACK_TITLE: "Jest y Sonar Cloud"
+        SLACK_MESSAGE: "❌Test de Jest o coverage de Sonar Cloud falló en `${{ github.ref_name }}` por ${{ github.actor }}"
         SLACK_COLOR: danger
 
   start_deploy_render:
