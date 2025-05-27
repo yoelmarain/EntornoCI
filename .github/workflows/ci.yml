@@ -8,9 +8,9 @@ on:
     branches: [main]
 
 jobs:
-  Test_and_Lint:
+  Lint:
+    name: Linter de código
     runs-on: ubuntu-22.04
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -38,18 +38,50 @@ jobs:
     - name: Lint code with ESLint
       run: npm run lint
 
-    - name: Run tests with Jest
-      run: npm test
-
+  
     # - name: Build project
     #   run: npm run build
     # Por ahora a la build la hacemos en el deploy    
 
+  test_and_sonarCloud:
+    name: Test de Jest y Sonar Cloud
+    runs-on: ubuntu-22.04
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setear Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Instalar dependencias
+        run: npm install --no-audit --no-optional
+
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Run tests with Jest
+        run: npm test
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  
   notify_slack_test_lint_exito:
     name: Notificar el exito de Jest y Linter
     runs-on: ubuntu-22.04
-    needs: Test_and_Lint
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.Test_and_Lint.result == 'success'
+    needs: test_and_sonarCloud
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs. test_and_sonarCloud.result == 'success'
     steps:                                
     - name: Notificar en Slack (éxito)
       uses: rtCamp/action-slack-notify@v2
@@ -62,8 +94,8 @@ jobs:
   notify_slack_test_lint_fallido:
     name: Notificar el fallo de Jest y Linter
     runs-on: ubuntu-22.04
-    needs: Test_and_Lint
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.Test_and_Lint.result == 'failure'
+    needs: test_and_sonarCloud
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.test_and_sonarCloud.result == 'failure'
     steps:
     - name: Notificar en Slack (error)
       uses: rtCamp/action-slack-notify@v2
@@ -76,8 +108,8 @@ jobs:
   start_deploy_render:
       name: Iniciar el despliegue en Render
       runs-on: ubuntu-22.04
-      needs: Test_and_Lint
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.Test_and_Lint.result == 'success'
+      needs: test_and_sonarCloud
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.test_and_sonarCloud.result == 'success'
       steps:
         - name: Desplegar en Render
           run: |
