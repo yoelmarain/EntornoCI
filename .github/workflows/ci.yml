@@ -108,7 +108,7 @@ jobs:
   start_deploy_render:
       name: Iniciar el despliegue en Render
       runs-on: ubuntu-22.04
-      needs: test_and_sonarCloud
+      needs: [test_and_sonarCloud, Lint] 
       if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.test_and_sonarCloud.result == 'success'
       steps:
         - name: Desplegar en Render
@@ -235,4 +235,3 @@ jobs:
           SLACK_TITLE: "Cypress Tests"
           SLACK_MESSAGE: "❌Tests de Cypress fallaron en `${{ github.ref_name }}` por ${{ github.actor }}"
           SLACK_COLOR: danger
-          
