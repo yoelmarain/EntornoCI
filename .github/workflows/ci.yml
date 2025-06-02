@@ -190,7 +190,7 @@ jobs:
     name: Testear el deploy
     runs-on: ubuntu-22.04
     needs: deploy_in_process
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && success()
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.deploy_in_process.result == 'success'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -220,10 +220,9 @@ jobs:
     name: Notificar el exito de Cypress
     runs-on: ubuntu-22.04
     needs: test_deploy
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && success()
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.test_deploy.result == 'success'
     steps:
       - name: Notificar en Slack (éxito)
-        if: success()
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -235,10 +234,9 @@ jobs:
     name: Notificar el fallo de Cypress
     runs-on: ubuntu-22.04
     needs: test_deploy
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && failure()
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.test_deploy.result == 'failure'
     steps:
       - name: Notificar en Slack (error)
-        if: failure()
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
