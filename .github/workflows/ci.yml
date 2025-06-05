@@ -87,19 +87,6 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
   
-  notify_slack_test_sonar_exito:
-    name: Notificar el exito de Jest y Sonar Cloud
-    runs-on: ubuntu-22.04
-    needs: test_and_sonarCloud
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs. test_and_sonarCloud.result == 'success'
-    steps:                                
-    - name: Notificar en Slack (éxito)
-      uses: rtCamp/action-slack-notify@v2
-      env:
-        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-        SLACK_TITLE: "Jest y Sonar Cloud"
-        SLACK_MESSAGE: "✅Test de Jest y coverage de Sonar Cloud finalizados con éxito en `${{ github.ref_name }}` por ${{ github.actor }}"
-        SLACK_COLOR: good
 
   notify_slack_test_sonar_fallido:
     name: Notificar el fallo de Jest y Sonar Cloud
@@ -158,19 +145,6 @@ jobs:
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
 
-  notify_deploy_exito:
-    name: Notificar el exito del deploy
-    runs-on: ubuntu-22.04
-    needs: deploy_in_process
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.deploy_in_process.result == 'success'
-    steps:
-      - name: Notificar en Slack (deploy exitoso)
-        uses: rtCamp/action-slack-notify@v2
-        env:
-            SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-            SLACK_TITLE: "Deploy Render"
-            SLACK_MESSAGE: "🚀 Deploy exitoso en `${{ github.ref_name }}` por ${{ github.actor }}"
-            SLACK_COLOR: good
 
   notify_deploy_fallido:
     name: Notificar el fallo del deploy
