@@ -33,7 +33,6 @@ jobs:
   test_and_sonarCloud:
     name: Test de Jest y Sonar Cloud
     runs-on: ubuntu-22.04
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -71,7 +70,7 @@ jobs:
     name: Notificar el fallo de Jest y Sonar Cloud
     runs-on: ubuntu-22.04
     needs: test_and_sonarCloud
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.test_and_sonarCloud.result == 'failure'
+    if: needs.test_and_sonarCloud.result == 'failure'
     steps:
     - name: Notificar en Slack (error)
       uses: rtCamp/action-slack-notify@v2
@@ -85,7 +84,7 @@ jobs:
       name: Iniciar el despliegue en Render
       runs-on: ubuntu-22.04
       needs: [test_and_sonarCloud, Lint] 
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.test_and_sonarCloud.result == 'success'
+      if: needs.test_and_sonarCloud.result == 'success'
       steps:
         - name: Desplegar en Render
           run: |
@@ -105,7 +104,7 @@ jobs:
     name: Esperar resultado del deploy en Render
     runs-on: ubuntu-22.04
     needs: start_deploy_render
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.start_deploy_render.result == 'success'
+    if: needs.start_deploy_render.result == 'success'
     steps:
       - name: Esperar a que Render termine el deploy
         run: |
@@ -130,7 +129,7 @@ jobs:
     name: Notificar el fallo del deploy
     runs-on: ubuntu-22.04
     needs: deploy_in_process
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.deploy_in_process.result == 'failure'
+    if: needs.deploy_in_process.result == 'failure'
     steps:
       - name: Notificar en Slack (deploy fallido)
         uses: rtCamp/action-slack-notify@v2
@@ -144,7 +143,7 @@ jobs:
     name: Testear el deploy
     runs-on: ubuntu-22.04
     needs: deploy_in_process
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.deploy_in_process.result == 'success'
+    if: needs.deploy_in_process.result == 'success'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -161,26 +160,12 @@ jobs:
 
       - name: Ejecutar Cypress
         run: npm run cypress:run
-
-  notify_slack_pipeline_exito:
-    name: Notificar el exito del pipeline
-    runs-on: ubuntu-22.04
-    needs: test_deploy
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.test_deploy.result == 'success'
-    steps:
-      - name: Notificar en Slack (éxito)
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-          SLACK_TITLE: "Pipeline status"
-          SLACK_MESSAGE: "✅Tests de Jest, Cypress, SonarCloud, Linter y Deploy finalizados con éxito en `${{ github.ref_name }}` por ${{ github.actor }}"
-          SLACK_COLOR: good
      
   notify_slack_cypress_fallido:
     name: Notificar el fallo de Cypress
     runs-on: ubuntu-22.04
     needs: test_deploy
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.test_deploy.result == 'failure'
+    if: needs.test_deploy.result == 'failure'
     steps:
       - name: Notificar en Slack (error)
         uses: rtCamp/action-slack-notify@v2
@@ -189,6 +174,20 @@ jobs:
           SLACK_TITLE: "Cypress Tests"
           SLACK_MESSAGE: "❌Tests de Cypress fallaron en `${{ github.ref_name }}` por ${{ github.actor }}"
           SLACK_COLOR: danger
+
+  notify_slack_pipeline_exito:
+    name: Notificar el exito del pipeline
+    runs-on: ubuntu-22.04
+    needs: test_deploy
+    if: success()
+    steps:
+      - name: Notificar en Slack (éxito)
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_TITLE: "Pipeline status"
+          SLACK_MESSAGE: "✅Tests de Jest, Cypress, SonarCloud, Linter y Deploy finalizados con éxito en `${{ github.ref_name }}` por ${{ github.actor }}"
+          SLACK_COLOR: good
 
           
 
