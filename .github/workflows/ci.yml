@@ -27,14 +27,6 @@ jobs:
       # env:
       #   CI: true
 
-    - name: Cache node modules
-      uses: actions/cache@v4
-      with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
     - name: Lint code with ESLint
       run: npm run lint
 
@@ -55,14 +47,6 @@ jobs:
 
       - name: Instalar dependencias
         run: npm install --no-audit --no-optional
-
-      - name: Cache node modules
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
 
       - name: Run tests with Jest
         run: npm test
@@ -172,22 +156,14 @@ jobs:
         with:
           node-version: 20
 
-      - name: Cache node modules
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
       - name: Instalar dependencias
         run: npm install --no-audit --no-optional
 
       - name: Ejecutar Cypress
         run: npm run cypress:run
 
-  notify_slack_cypress_exito:
-    name: Notificar el exito de Cypress
+  notify_slack_pipeline_exito:
+    name: Notificar el exito del pipeline
     runs-on: ubuntu-22.04
     needs: test_deploy
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.test_deploy.result == 'success'
@@ -196,8 +172,8 @@ jobs:
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-          SLACK_TITLE: "Cypress Tests"
-          SLACK_MESSAGE: "✅Tests de Cypress finalizados con éxito en `${{ github.ref_name }}` por ${{ github.actor }}"
+          SLACK_TITLE: "Pipeline status"
+          SLACK_MESSAGE: "✅Tests de Jest, Cypress, SonarCloud, Linter y Deploy finalizados con éxito en `${{ github.ref_name }}` por ${{ github.actor }}"
           SLACK_COLOR: good
      
   notify_slack_cypress_fallido:
