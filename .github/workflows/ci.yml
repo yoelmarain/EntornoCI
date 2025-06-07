@@ -38,10 +38,8 @@ jobs:
     - name: Lint code with ESLint
       run: npm run lint
 
-  
-    # - name: Build project
-    #   run: npm run build
-    # Por ahora a la build la hacemos en el deploy    
+    - name: Compilar código
+      run: npm run build   
 
   test_and_sonarCloud:
     name: Test de Jest y Sonar Cloud
@@ -102,24 +100,37 @@ jobs:
         SLACK_MESSAGE: "❌Test de Jest o coverage de Sonar Cloud falló en `${{ github.ref_name }}` por ${{ github.actor }}"
         SLACK_COLOR: danger
 
+  # start_deploy_render:
+  #     name: Iniciar el despliegue en Render
+  #     runs-on: ubuntu-22.04
+  #     needs: [test_and_sonarCloud, Lint] 
+  #     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.test_and_sonarCloud.result == 'success'
+  #     steps:
+  #       - name: Desplegar en Render
+  #         run: |
+  #           response=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}")
+  #           if [ $response -eq 200 ]; then
+  #             echo "Deployment triggered successfully"
+  #           else
+  #             echo "Deployment failed with HTTP status code $response"
+  #             curl -X POST -H 'Content-type: application/json' --data '{"text":"Ha fallado al iniciar el despliegue en Render!"}' "${{ secrets.SLACK_WEBHOOK_URL }}"
+  #             exit 1
+  #           fi
+  #         env:
+  #           SLACK_WEBHOOK_DEPLOYS: ${{ secrets.SLACK_WEBHOOK_URL }}
+
   start_deploy_render:
-      name: Iniciar el despliegue en Render
-      runs-on: ubuntu-22.04
-      needs: [test_and_sonarCloud, Lint] 
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.test_and_sonarCloud.result == 'success'
-      steps:
-        - name: Desplegar en Render
-          run: |
-            response=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}")
-            if [ $response -eq 200 ]; then
-              echo "Deployment triggered successfully"
-            else
-              echo "Deployment failed with HTTP status code $response"
-              curl -X POST -H 'Content-type: application/json' --data '{"text":"Ha fallado al iniciar el despliegue en Render!"}' "${{ secrets.SLACK_WEBHOOK_URL }}"
-              exit 1
-            fi
-          env:
-            SLACK_WEBHOOK_DEPLOYS: ${{ secrets.SLACK_WEBHOOK_URL }}
+    name: Deploy to Render (sin rebuild)
+    needs: [test_and_sonarCloud, Lint] # o los jobs que correspondan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Deploy via Render API (sin rebuild)
+        run: |
+          curl -X POST \
+            -H "Accept: application/json" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -d '{"skipBuild": true}' \
+            https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys
         
   deploy_in_process:
     name: Esperar resultado del deploy en Render
