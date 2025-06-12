@@ -1,6 +1,7 @@
 function concatenateNumbers(num1, num2) {
     if ( num1.trim() !== '' && num2.trim() !== '' ) {
         return num1 + num2;
+        // return 'a';
     } else {
         return 'Se deben ingresar dos números válidos';
     }
