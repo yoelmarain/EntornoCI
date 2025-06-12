@@ -4,6 +4,6 @@ document.getElementById('concatButton').addEventListener('click', () => {
 
     // Usa la función global
     const result = window.concatenateNumbers(number1, number2);
-    document.getElementById('result').textContent = `Resultado: ${result}`;
+    document.getElementById('result').textContent = `Resultados: ${result}`;
 });
 
