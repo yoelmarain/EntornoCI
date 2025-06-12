@@ -4,9 +4,6 @@ on:
   pull_request:
     branches: [main]
 
-  push:
-    branches: [main]
-
 jobs:
   Lint:
     name: Linter de código
@@ -24,8 +21,6 @@ jobs:
 
     - name: Install dependencies
       run: npm install --no-audit --nooptional
-      # env:
-      #   CI: true
 
     - name: Lint code with ESLint
       run: npm run lint
