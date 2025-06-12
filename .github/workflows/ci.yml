@@ -59,21 +59,16 @@ jobs:
           fi
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-  
 
-  notify_slack_test_sonar_fallido:
-    name: Notificar el fallo de Jest y Sonar Cloud
-    runs-on: ubuntu-22.04
-    needs: test_and_sonarCloud
-    if: needs.test_and_sonarCloud.result == 'failure'
-    steps:
-    - name: Notificar en Slack (error)
-      uses: rtCamp/action-slack-notify@v2
-      env:
-        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-        SLACK_TITLE: "Jest y Sonar Cloud"
-        SLACK_MESSAGE: "❌Test de Jest o coverage de Sonar Cloud falló en `${{ github.ref_name }}` por ${{ github.actor }}"
-        SLACK_COLOR: danger
+      - name: Notificar en Slack si Jest o SonarCloud fallan
+        if: failure()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_TITLE: "Jest y Sonar Cloud"
+          SLACK_MESSAGE: "❌Test de Jest o coverage de Sonar Cloud falló en `${{ github.ref_name }}` por ${{ github.actor }}"
+          SLACK_COLOR: danger
+
 
   start_deploy_render:
       name: Iniciar el despliegue en Render
@@ -118,21 +113,15 @@ jobs:
           echo "Deployment completed successfully."
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-
-
-  notify_deploy_fallido:
-    name: Notificar el fallo del deploy
-    runs-on: ubuntu-22.04
-    needs: deploy_in_process
-    if: needs.deploy_in_process.result == 'failure'
-    steps:
+    
       - name: Notificar en Slack (deploy fallido)
+        if: failure()
         uses: rtCamp/action-slack-notify@v2
         env:
-            SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-            SLACK_TITLE: "Deploy Render"
-            SLACK_MESSAGE: "❌ Deploy fallido en `${{ github.ref_name }}` por ${{ github.actor }}"
-            SLACK_COLOR: danger
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_TITLE: "Deploy Render"
+          SLACK_MESSAGE: "❌ Deploy fallido en `${{ github.ref_name }}` por ${{ github.actor }}"
+          SLACK_COLOR: danger
   
   test_deploy:
     name: Testear el deploy
@@ -155,14 +144,9 @@ jobs:
 
       - name: Ejecutar Cypress
         run: npm run cypress:run
-     
-  notify_slack_cypress_fallido:
-    name: Notificar el fallo de Cypress
-    runs-on: ubuntu-22.04
-    needs: test_deploy
-    if: needs.test_deploy.result == 'failure'
-    steps:
-      - name: Notificar en Slack (error)
+
+      - name: Notificar en Slack (Cypress fallido)
+        if: failure()
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
