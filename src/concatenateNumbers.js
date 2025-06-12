@@ -8,6 +8,7 @@ function concatenateNumbers(num1, num2) {
     
 }
 
+
 // CommonJS export (para Node/Jest)
 if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
     module.exports = concatenateNumbers;
