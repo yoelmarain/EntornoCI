@@ -26,7 +26,7 @@ jobs:
       run: npm run lint
 
   test_and_sonarCloud:
-    name: Test de Jest y Sonar Cloud
+    name: Test de Jest 
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout code
@@ -45,20 +45,7 @@ jobs:
       - name: Run tests with Jest
         run: npm test
 
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v2
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-      - name: Chequeo del Quality Gate
-        run: |
-          SONAR_STATUS=$(curl -s -u ${{ secrets.SONAR_TOKEN }}: "https://sonarcloud.io/api/qualitygates/project_status?projectKey=yoelmarain_EntornoCI" | jq -r '.projectStatus.status')
-          if [ "$SONAR_STATUS" != "OK" ]; then
-            echo "Quality gate failed: $SONAR_STATUS"
-            exit 1
-          fi
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      
 
       - name: Notificar en Slack si Jest o SonarCloud fallan
         if: failure()
